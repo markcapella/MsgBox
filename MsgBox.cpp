@@ -1,0 +1,134 @@
+
+// Std C.
+#include <iostream>
+#include <string>
+#include <string.h>
+
+// X11.
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
+
+// Application.
+#include "MsgBox.h"
+
+using namespace std;
+
+/** ********************************************************
+ ** Module globals and consts.
+ **/
+
+// Minor styling.
+#define COLOR_RED "\033[0;31m"
+#define COLOR_GREEN "\033[1;32m"
+#define COLOR_YELLOW "\033[1;33m"
+#define COLOR_BLUE "\033[1;34m"
+#define COLOR_NORMAL "\033[0m"
+
+Display* mDisplay;
+
+/** ********************************************************
+ ** Module Entry.
+ **/
+int main(int argCount, char** argValues) {
+    // Open X11 display, ensure it's available.
+    mDisplay = XOpenDisplay(NULL);
+    if (mDisplay == NULL) {
+        cout << COLOR_RED << "\nMsgBox: X11 Windows are unavailable "
+            "with this desktop." << COLOR_NORMAL << "\n";
+        exit(1);
+    }
+
+    // Ensure proper invocation.
+    if (argCount < 7) {
+        XCloseDisplay(mDisplay);
+        displayUsage();
+        exit(1);
+    }
+
+    // Parse invocation.
+    const int xPos = atoi(argValues[1]);
+    const int yPos = atoi(argValues[2]);
+    const int width = atoi(argValues[3]);
+    const int height = atoi(argValues[4]);
+    const string msgTitle(argValues[5]);
+    const string msgString(argValues[6]);
+
+    // Create X11 window.
+    Window msgBox = XCreateSimpleWindow(mDisplay,
+        DefaultRootWindow(mDisplay), 0, 0, width, height,
+        1, BlackPixel(mDisplay, 0), WhitePixel(mDisplay, 0));
+
+    // Set title string.
+    XTextProperty properties;
+    properties.value = (unsigned char*) msgTitle.c_str();
+    properties.encoding = XA_STRING;
+    properties.format = 8;
+    properties.nitems = msgTitle.length();
+    XSetWMName(mDisplay, msgBox, &properties);
+
+    // Set title icon.
+    char* appName = strdup("msgbox");
+    char* iconName = strdup("msgbox");
+
+    XClassHint* classHint = XAllocClassHint();
+    if (classHint) {
+        classHint->res_class = iconName;
+        classHint->res_name = appName;
+        XSetClassHint(mDisplay, msgBox, classHint);
+    }
+
+    XTextProperty iconProperty;
+    XStringListToTextProperty(&iconName, 1, &iconProperty);
+    XSetWMIconName(mDisplay, msgBox, &iconProperty);
+
+    //XSetIconName(mDisplay, msgBox, "msgBox");
+
+    // Map (show) window.
+    XMapWindow(mDisplay, msgBox);
+    XMoveWindow(mDisplay, msgBox, xPos, yPos);
+
+    // Select observable x11 events.
+    XSelectInput(mDisplay, msgBox, ExposureMask);
+
+    // Select observable x11 client messages.
+    Atom mDeleteMessage = XInternAtom(mDisplay,
+        "WM_DELETE_WINDOW", False);
+    XSetWMProtocols(mDisplay, msgBox, &mDeleteMessage, 1);
+
+    // Loop events until close event frees us.
+    bool msgboxActive = true;
+    while (msgboxActive) {
+        XEvent event;
+        XNextEvent(mDisplay, &event);
+
+        switch (event.type) {
+            case ClientMessage:
+                if (event.xclient.data.l[0] == mDeleteMessage) {
+                    msgboxActive = false;
+                }
+                break;
+
+            case Expose:
+                XDrawString(mDisplay, msgBox, DefaultGC(mDisplay, 0),
+                    0, 30, msgString.c_str(), msgString.length());
+                break;
+        }
+    }
+
+    // Close display & done.
+    XCloseDisplay(mDisplay);
+}
+
+/** ********************************************************
+ ** This method ...
+ **/
+void displayUsage() {
+    cout << COLOR_BLUE << "\nUseage:" << COLOR_NORMAL << "\n";
+    cout << COLOR_GREEN << "   MsgBox xPos yPos width height "
+        "title message" << COLOR_NORMAL << "\n";
+
+    cout << COLOR_BLUE << "\nExample:" << COLOR_NORMAL << "\n";
+    cout << COLOR_GREEN << "   MsgBox 600 400 200 60 \"Warning\" "
+        "\"   Something Bad happened  :-(\"" << COLOR_NORMAL << "\n";
+}
