@@ -18,6 +18,9 @@ CC = g++
 X11_CFLAGS=`pkg-config --cflags x11`
 X11_LFLAGS=`pkg-config --libs x11`
 
+FREETYPE_CFLAGS = `pkg-config --cflags xft`
+FREETYPE_LFLAGS = `pkg-config --libs xft`
+
 
 # ****************************************************
 # Compile & link.
@@ -38,8 +41,8 @@ all: MsgBox.cpp
 	@echo "$(COLOR_BLUE)Build Starts.$(COLOR_NORMAL)"
 	@echo
 
-	$(CC) $(X11_CFLAGS) -c MsgBox.cpp
-	$(CC) MsgBox.o $(X11_LFLAGS) -o MsgBox
+	$(CC) $(X11_CFLAGS) $(FREETYPE_CFLAGS) -c MsgBox.cpp
+	$(CC) MsgBox.o $(X11_LFLAGS) $(FREETYPE_LFLAGS) -o MsgBox
 
 	@echo
 	@echo "$(COLOR_BLUE)Build Done.$(COLOR_NORMAL)"

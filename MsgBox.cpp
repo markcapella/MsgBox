@@ -5,6 +5,7 @@
 #include <string.h>
 
 // X11.
+#include <X11/Xft/Xft.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -29,6 +30,13 @@ Display* mDisplay;
 
 Window mMsgBox;
 
+XftFont* mFont;
+
+const XftColor mFontColor = { .pixel = 0x0, .color = { 
+    .red = 0xff, .green = 0xff,
+    .blue = 0xff, .alpha = 0xffff } };
+
+
 /** ********************************************************
  ** Module Entry.
  **/
@@ -39,6 +47,14 @@ int main(int argCount, char** argValues) {
         cout << COLOR_RED << "\nMsgBox: X11 Windows are unavailable "
             "with this desktop." << COLOR_NORMAL << "\n";
         exit(1);
+    }
+
+    mFont = XftFontOpenName(mDisplay, DefaultScreen(mDisplay),
+        "-misc-fixed-medium-r-normal--15-140-75-75-c-90-iso8859-16");
+    if (mFont == NULL) {
+        cout << COLOR_RED << "\nMsgBox: Cannot open XftFont - "
+            "FATAL.\n" << COLOR_NORMAL;
+        exit(3);
     }
 
     // Ensure proper invocation.
@@ -110,8 +126,13 @@ int main(int argCount, char** argValues) {
                 break;
 
             case Expose:
-                XDrawString(mDisplay, mMsgBox, DefaultGC(mDisplay, 0),
-                    0, 30, msgString.c_str(), msgString.length());
+                XftDraw* textDrawable = XftDrawCreate(mDisplay, mMsgBox,
+                    DefaultVisual(mDisplay, DefaultScreen(mDisplay)),
+                   DefaultColormap(mDisplay, DefaultScreen(mDisplay)));
+
+                XftDrawString8(textDrawable, &mFontColor, mFont,
+                    LEFT_MARGIN, TOP_MARGIN,
+                    (const FcChar8*) msgString.c_str(), msgString.length());
                 break;
         }
     }
@@ -131,6 +152,6 @@ void displayUsage() {
         "title message" << COLOR_NORMAL << "\n";
 
     cout << COLOR_BLUE << "\nExample:" << COLOR_NORMAL << "\n";
-    cout << COLOR_GREEN << "   MsgBox 600 400 200 60 \"Warning\" "
-        "\"   Something Bad happened  :-(\"" << COLOR_NORMAL << "\n";
+    cout << COLOR_GREEN << "   MsgBox 600 500 260 66 \"Warning\" "
+        "\"Something Bad happened  :-(\"" << COLOR_NORMAL << "\n";
 }

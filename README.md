@@ -24,7 +24,7 @@
     
     
 ## Example
-    MsgBox 600 400 200 60 "Warning" "   Something Bad happened  :-("
+    MsgBox 600 500 260 66 "Warning" "Something Bad happened  :-("
     
     
 ## markcapella@twcny.rr.com Rocks !
