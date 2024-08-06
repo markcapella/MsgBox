@@ -27,6 +27,8 @@ using namespace std;
 
 Display* mDisplay;
 
+Window mMsgBox;
+
 /** ********************************************************
  ** Module Entry.
  **/
@@ -55,7 +57,7 @@ int main(int argCount, char** argValues) {
     const string msgString(argValues[6]);
 
     // Create X11 window.
-    Window msgBox = XCreateSimpleWindow(mDisplay,
+    mMsgBox = XCreateSimpleWindow(mDisplay,
         DefaultRootWindow(mDisplay), 0, 0, width, height,
         1, BlackPixel(mDisplay, 0), WhitePixel(mDisplay, 0));
 
@@ -65,7 +67,7 @@ int main(int argCount, char** argValues) {
     properties.encoding = XA_STRING;
     properties.format = 8;
     properties.nitems = msgTitle.length();
-    XSetWMName(mDisplay, msgBox, &properties);
+    XSetWMName(mDisplay, mMsgBox, &properties);
 
     // Set title icon.
     char* appName = strdup("msgbox");
@@ -75,26 +77,24 @@ int main(int argCount, char** argValues) {
     if (classHint) {
         classHint->res_class = iconName;
         classHint->res_name = appName;
-        XSetClassHint(mDisplay, msgBox, classHint);
+        XSetClassHint(mDisplay, mMsgBox, classHint);
     }
 
     XTextProperty iconProperty;
     XStringListToTextProperty(&iconName, 1, &iconProperty);
-    XSetWMIconName(mDisplay, msgBox, &iconProperty);
-
-    //XSetIconName(mDisplay, msgBox, "msgBox");
+    XSetWMIconName(mDisplay, mMsgBox, &iconProperty);
 
     // Map (show) window.
-    XMapWindow(mDisplay, msgBox);
-    XMoveWindow(mDisplay, msgBox, xPos, yPos);
+    XMapWindow(mDisplay, mMsgBox);
+    XMoveWindow(mDisplay, mMsgBox, xPos, yPos);
 
     // Select observable x11 events.
-    XSelectInput(mDisplay, msgBox, ExposureMask);
+    XSelectInput(mDisplay, mMsgBox, ExposureMask);
 
     // Select observable x11 client messages.
     Atom mDeleteMessage = XInternAtom(mDisplay,
         "WM_DELETE_WINDOW", False);
-    XSetWMProtocols(mDisplay, msgBox, &mDeleteMessage, 1);
+    XSetWMProtocols(mDisplay, mMsgBox, &mDeleteMessage, 1);
 
     // Loop events until close event frees us.
     bool msgboxActive = true;
@@ -110,13 +110,15 @@ int main(int argCount, char** argValues) {
                 break;
 
             case Expose:
-                XDrawString(mDisplay, msgBox, DefaultGC(mDisplay, 0),
+                XDrawString(mDisplay, mMsgBox, DefaultGC(mDisplay, 0),
                     0, 30, msgString.c_str(), msgString.length());
                 break;
         }
     }
 
     // Close display & done.
+    XUnmapWindow(mDisplay, mMsgBox);
+    XDestroyWindow(mDisplay, mMsgBox);
     XCloseDisplay(mDisplay);
 }
 
