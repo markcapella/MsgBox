@@ -1,7 +1,7 @@
 
 # *****************************************************
 # Variables to control Compile / Link.
-
+#
 APP_NAME="MsgBox"
 APP_VERSION="2024-08-05"
 APP_AUTHOR="Mark James Capella"
@@ -15,15 +15,15 @@ COLOR_NORMAL = \033[0m
 
 CC = g++
 
-X11_CFLAGS=`pkg-config --cflags x11`
-X11_LFLAGS=`pkg-config --libs x11`
+X11_CFLAGS = `pkg-config --cflags x11`
+X11_LFLAGS = `pkg-config --libs x11`
 
 FREETYPE_CFLAGS = `pkg-config --cflags xft`
 FREETYPE_LFLAGS = `pkg-config --libs xft`
 
 
 # ****************************************************
-# Compile & link.
+# make
 #
 all: MsgBox.cpp
 	@if [ "$(shell id -u)" = 0 ]; then \
@@ -44,10 +44,10 @@ all: MsgBox.cpp
 	$(CC) $(X11_CFLAGS) $(FREETYPE_CFLAGS) -c MsgBox.cpp
 	$(CC) MsgBox.o $(X11_LFLAGS) $(FREETYPE_LFLAGS) -o MsgBox
 
+	@echo "true" > "BUILD_COMPLETE"
+
 	@echo
 	@echo "$(COLOR_BLUE)Build Done.$(COLOR_NORMAL)"
-
-	@echo "true" > "BUILD_COMPLETE"
 
 # ****************************************************
 # sudo make install
@@ -83,7 +83,7 @@ install:
 	chmod +x /usr/local/bin/MsgBox
 	@echo
 
-	cp 'msgbox.png' /usr/share/icons/hicolor/48x48/apps/
+	cp 'msgboxerror.png' /usr/share/icons/hicolor/48x48/apps/
 
 	@echo
 	@echo "$(COLOR_BLUE)Install Done.$(COLOR_NORMAL)"
@@ -110,7 +110,7 @@ uninstall:
 	rm -f /usr/local/bin/MsgBox
 	@echo
 
-	rm -f /usr/share/icons/hicolor/48x48/apps/msgbox.png
+	rm -f /usr/share/icons/hicolor/48x48/apps/msgboxerror.png
 
 	@echo
 	@echo "$(COLOR_BLUE)Uninstall Done.$(COLOR_NORMAL)"
