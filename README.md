@@ -1,6 +1,6 @@
 # MsgBox
     
-!['MsgBox'](https://github.com/markcapella/MsgBox/blob/main/assets/screenshot.png)
+!['MsgBox'](https://github.com/markcapella/MsgBox/blob/main/screenshot.png)
     
 ## Description
         This is a barebones GUI Message Box for bash scripts
@@ -12,16 +12,17 @@
     
 ## Installation
     
-### CD into source repo.
+### CD into source repo
     make
-    
+    make run
+
     sudo make install
     sudo make uninstall
     
     make clean
     
     
-## Usage
+## Usage after install
     MsgBox xPos yPos width height title message
     
     
@@ -29,7 +30,7 @@
     MsgBox 600 500 260 66 "Warning" "Something Bad happened  :-("
     
     
-## markcapella@twcny.rr.com Rocks !
+## markjamescapella@proton.me Rocks !
     Yeah I do.
     
     

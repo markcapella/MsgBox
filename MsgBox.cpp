@@ -14,28 +14,38 @@ using namespace std;
 
 // Application.
 #include "MsgBox.h"
+#include "xPngWrapper.h"
 
 
-/** ********************************************************
- ** Module globals and consts.
- **/
+/**
+ * Module Consts.
+ */
+const string INPUT_PNGFILE =
+    "/usr/share/icons/hicolor/48x48/apps/msgboxerror.png";
+
+const XftColor mFontColor = {
+    .pixel = 0x0, .color = {
+        .red = 0xff, .green = 0xff,
+        .blue = 0xff, .alpha = 0xffff
+    }
+};
+
+/**
+ * Module globals.
+ */
 Display* mDisplay;
 Window mMsgBox;
 XftFont* mFont;
+xPngWrapper* mIconWrapper;
 
-const XftColor mFontColor = { .pixel = 0x0, .color = { 
-    .red = 0xff, .green = 0xff,
-    .blue = 0xff, .alpha = 0xffff } };
-
-
-/** ********************************************************
- ** Module Entry.
- **/
+/**
+ * Module Entry.
+ */
 int main(int argCount, char** argValues) {
     // Ensure proper invocation.
     if (argCount < APP_PARMS_REQUIRED) {
         displayUsage();
-        exit(1);
+        return true;
     }
 
     // Parse invocation.
@@ -46,10 +56,20 @@ int main(int argCount, char** argValues) {
     const string msgTitle(argValues[5]);
     const string msgString(argValues[6]);
 
+    // Get wrapped PNG file for the Icon.
+    char* pngFileName = strdup(INPUT_PNGFILE.c_str());
+    mIconWrapper = new xPngWrapper(pngFileName);
+    if (mIconWrapper->hasErrorStatus()) {
+        cout << COLOR_RED << endl << "MsgBox: " <<
+            mIconWrapper->errorStatus() <<
+            COLOR_NORMAL << endl;
+        return true;
+    }
+
     // Open X11 display, ensure it's available.
     mDisplay = XOpenDisplay(NULL);
     if (mDisplay == NULL) {
-        cout << COLOR_RED << "\nMsgBox: X11 Windows are "
+        cout << COLOR_RED << "MsgBox: X11 Windows are "
             "unavailable with this desktop. - FATAL" <<
             COLOR_NORMAL << "\n";
         exit(2);
@@ -70,7 +90,7 @@ int main(int argCount, char** argValues) {
         DefaultRootWindow(mDisplay), 0, 0, width, height,
         1, BlackPixel(mDisplay, 0), WhitePixel(mDisplay, 0));
 
-    // Set MsgBox title string.
+    // Set title string.
     XTextProperty properties;
     properties.value = (unsigned char*) msgTitle.c_str();
     properties.encoding = XA_STRING;
@@ -78,17 +98,27 @@ int main(int argCount, char** argValues) {
     properties.nitems = msgTitle.length();
     XSetWMName(mDisplay, mMsgBox, &properties);
 
-    // Set MsgBox icon.
-    char* iconName = strdup("msgboxerror");
+    // Set icon name strings.
     XClassHint* classHint = XAllocClassHint();
     if (classHint) {
-        classHint->res_class = iconName;
-        classHint->res_name = iconName;
+        classHint->res_class = pngFileName;
+        classHint->res_name = pngFileName;
         XSetClassHint(mDisplay, mMsgBox, classHint);
+        XFree(classHint);
     }
     XTextProperty iconProperty;
-    XStringListToTextProperty(&iconName, 1, &iconProperty);
+    XStringListToTextProperty(&pngFileName, 1,
+        &iconProperty);
     XSetWMIconName(mDisplay, mMsgBox, &iconProperty);
+
+    // Set the _NET_WM_ICON property from the vector.
+    const Atom net_wm_icon = XInternAtom(mDisplay,
+        "_NET_WM_ICON", False);
+    XChangeProperty(mDisplay, mMsgBox, net_wm_icon,
+        XA_CARDINAL, 32, PropModeReplace,
+        reinterpret_cast<unsigned char*>
+            (mIconWrapper->getPngData().data()),
+             mIconWrapper->getPngData().size());
 
     // Map (show) MsgBox window.
     XMapWindow(mDisplay, mMsgBox);
@@ -118,13 +148,20 @@ int main(int argCount, char** argValues) {
         // Process Expose event. Set the MsgBox
         // Msg on Window expose.
         if (event.type == Expose) {
-            XftDraw* textDrawable = XftDrawCreate(mDisplay, mMsgBox,
-                DefaultVisual(mDisplay, DefaultScreen(mDisplay)),
-               DefaultColormap(mDisplay, DefaultScreen(mDisplay)));
-
-            XftDrawString8(textDrawable, &mFontColor, mFont,
-                LEFT_MARGIN, TOP_MARGIN,
-                (const FcChar8*) msgString.c_str(), msgString.length());
+            if (XPending(mDisplay) == 0) {
+                const XExposeEvent* EVENT =
+                    (XExposeEvent*) &event;
+                if (EVENT->width > 1 && EVENT->height > 1) {
+                    XftDraw* textDrawable = XftDrawCreate(mDisplay,
+                        mMsgBox, DefaultVisual(mDisplay,
+                        DefaultScreen(mDisplay)),
+                        DefaultColormap(mDisplay,
+                        DefaultScreen(mDisplay)));
+                    XftDrawString8(textDrawable, &mFontColor, mFont,
+                        LEFT_MARGIN, TOP_MARGIN, (const FcChar8*)
+                        msgString.c_str(), msgString.length());
+                }
+            }
         }
     }
 
@@ -134,11 +171,11 @@ int main(int argCount, char** argValues) {
     XCloseDisplay(mDisplay);
 }
 
-/** ********************************************************
- ** This method displays the basic use syntax.
- **/
+/**
+ * Helper method to display app cmdline invocation.
+ */
 void displayUsage() {
-    cout << COLOR_BLUE << "\nUseage:" << COLOR_NORMAL << "\n";
+    cout << COLOR_BLUE << "\nUsage:" << COLOR_NORMAL << "\n";
     cout << COLOR_GREEN << "   MsgBox xPos yPos width height "
         "title message" << COLOR_NORMAL << "\n";
 
