@@ -3,7 +3,7 @@
 # Variables to control Compile / Link.
 #
 APP_NAME="MsgBox"
-APP_VERSION="2026-01-04"
+APP_VERSION="2026-03-04"
 APP_AUTHOR="Mark James Capella"
 
 # Color styling.
@@ -89,7 +89,7 @@ run:
 	@echo "$(COLOR_BLUE)Run Starts.$(COLOR_NORMAL)"
 	@echo
 
-	@./MsgBox 600 500 260 66 \
+	./MsgBox 600 500 260 66 \
 		"Warning" "Something Bad happened  :-("
 
 	@echo
