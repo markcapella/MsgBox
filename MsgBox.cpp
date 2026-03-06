@@ -1,8 +1,15 @@
 
+/**
+ * This is a single line GUI Message Box for bash
+ * scripts in X11 Desktops. Built with native X11.
+ */
+
 // Std C and c++.
 #include <iostream>
 #include <string>
 #include <string.h>
+
+using namespace std;
 
 // X11.
 #include <X11/Xatom.h>
@@ -10,10 +17,9 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-using namespace std;
-
 // Application.
 #include "MsgBox.h"
+#include "xDisplayHelper.h"
 #include "xPngWrapper.h"
 
 
@@ -34,7 +40,9 @@ const XftColor mFontColor = {
 /**
  * Module globals.
  */
+xDisplayHelper* mDisplayHelper;
 Display* mDisplay;
+
 Window mMsgBox;
 XftFont* mFont;
 xPngWrapper* mIconWrapper;
@@ -71,7 +79,8 @@ int main(int argCount, char** argValues) {
     }
 
     // Open X11 display, ensure it's available.
-    mDisplay = XOpenDisplay(NULL);
+    mDisplayHelper = new xDisplayHelper();
+    mDisplay = mDisplayHelper->getDisplay();
     if (mDisplay == NULL) {
         cout << COLOR_RED << "MsgBox: X11 Windows are "
             "unavailable with this desktop. - FATAL" <<
@@ -184,6 +193,6 @@ void displayUsage() {
         "title message" << COLOR_NORMAL << "\n";
 
     cout << COLOR_BLUE << "\nExample:" << COLOR_NORMAL << "\n";
-    cout << COLOR_GREEN << "   MsgBox 600 500 260 66 \"Warning\" "
+    cout << COLOR_GREEN << "   MsgBox 600 500 360 66 \"Warning\" "
         "\"Something Bad happened  :-(\"" << COLOR_NORMAL << "\n";
 }
