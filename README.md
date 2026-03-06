@@ -7,8 +7,6 @@
     in X11 Desktops. It allows for box position, size, title and
     a single line message.
     
-    Built with native X11, this works equally well under Wayland ! 
-    
     
 ## Installation
     

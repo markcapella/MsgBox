@@ -20,8 +20,9 @@ using namespace std;
 /**
  * Module Consts.
  */
-const string INPUT_PNGFILE =
-    "/usr/share/icons/hicolor/48x48/apps/msgboxerror.png";
+const string ICON_PNGPATH =
+    "/usr/share/icons/hicolor/48x48/apps/";
+const string ICON_PNGFILE = "msgboxerror.png";
 
 const XftColor mFontColor = {
     .pixel = 0x0, .color = {
@@ -57,8 +58,11 @@ int main(int argCount, char** argValues) {
     const string msgString(argValues[6]);
 
     // Get wrapped PNG file for the Icon.
-    char* pngFileName = strdup(INPUT_PNGFILE.c_str());
-    mIconWrapper = new xPngWrapper(pngFileName);
+    char* pngFileName = strdup(ICON_PNGFILE.c_str());
+    mIconWrapper = new xPngWrapper({
+        string(pngFileName),
+        string(ICON_PNGPATH + pngFileName)
+    });
     if (mIconWrapper->hasErrorStatus()) {
         cout << COLOR_RED << endl << "MsgBox: " <<
             mIconWrapper->errorStatus() <<
